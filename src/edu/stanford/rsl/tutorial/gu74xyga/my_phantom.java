@@ -11,9 +11,9 @@ public class my_phantom extends Grid2D {
 		float valueIntensity1;
 		float valueIntensity2;
 		float valueIntensity3;
-		valueIntensity1 = 0.8f;
-		valueIntensity2 = 0.4f;
-		valueIntensity3 = 0.1f;
+		valueIntensity1 = 300.0f;
+		valueIntensity2 = 200.0f;
+		valueIntensity3 = 100.0f;
 		// spacing=1.0d;
 		this.setOrigin(-(double)x/2*spacing,-(double)y/2*spacing);
 		this.setSpacing(spacing,spacing);

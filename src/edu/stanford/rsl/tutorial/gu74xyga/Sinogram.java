@@ -4,9 +4,14 @@ import java.util.ArrayList;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.InterpolationOperators;
+import edu.stanford.rsl.conrad.data.numeric.NumericPointwiseOperators;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.Box;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.PointND;
 import edu.stanford.rsl.conrad.geometry.shapes.simple.StraightLine;
+import edu.stanford.rsl.conrad.geometry.transforms.Transform;
+import edu.stanford.rsl.conrad.geometry.transforms.Translation;
+import edu.stanford.rsl.conrad.numerics.SimpleOperators;
+import edu.stanford.rsl.conrad.numerics.SimpleVector;
 import edu.stanford.rsl.tutorial.phantoms.SheppLogan;
 
 public class Sinogram {
@@ -21,97 +26,87 @@ public class Sinogram {
 	public Grid2D PProjection(Grid2D target, double angle, int detector_pixels,
 			int projection_number, double detector_spacing) {
 		double angle_change = angle / projection_number;
-		double internalSpacing = Math.sqrt(target.getSpacing()[0]
-				* target.getSpacing()[0] + target.getSpacing()[1]
-				* target.getSpacing()[1]) / 2;
-
-		Grid2D sinogram = new Grid2D(detector_pixels, projection_number);
-		int targetSize[] = target.getSize();
-		Box phantomBox = new Box(targetSize[0]*target.getSpacing()[0], targetSize[1]*target.getSpacing()[1], 0);
-
-		PointND lowerCorner = new PointND(-targetSize[0] / 2*target.getSpacing()[0],
-				-targetSize[1] / 2*target.getSpacing()[1], 0);
-		PointND upperCorner = new PointND(targetSize[0] / 2*target.getSpacing()[0],
-				targetSize[1] / 2*target.getSpacing()[1], 0);
-		phantomBox.setLowerCorner(lowerCorner);
-		phantomBox.setUpperCorner(upperCorner);
+		double samplingRate = 2.d; 
+		double detectorSize=detector_pixels*detector_spacing;
 		
-		//
-		for (int i = 0; i < projection_number; i++) {
-			double theta = i * angle_change * 2 * Math.PI / 360;
-			double cosineTheta = Math.cos(theta);
-			double sineTheta = Math.sin(theta);
-			float sum = 0;
-			for (int detector_position = 0; detector_position < detector_pixels; detector_position++) {
-				double s = detector_position - detector_pixels / 2;
-				s*=detector_spacing;
-				double x = s * cosineTheta;
-				double y = s * sineTheta;
-				double normalX = x - sineTheta;
-				double normalY = y + cosineTheta;
+		Grid2D sinogram = new Grid2D(detector_pixels, projection_number);
+		sinogram.setSpacing(detector_spacing, angle_change);
 
-				PointND p1 = new PointND(x, y, 0);
-				PointND p2 = new PointND(normalX, normalY, 0);
+		// set up image bounding box in WC
+		Translation trans = new Translation(
+				-(target.getSize()[0] * target.getSpacing()[0])/2, -(target.getSize()[1] * target.getSpacing()[1])/2, -1
+			);
+		Transform inverse = trans.inverse();
 
-				StraightLine curve = new StraightLine(p1, p2);
-				ArrayList<PointND> pointsOnNormal = phantomBox.intersect(curve);
+		Box b = new Box((target.getSize()[0] * target.getSpacing()[0]), (target.getSize()[1] * target.getSpacing()[1]), 2);
+		b.applyTransform(trans);
 
-				PointND intersectionPoint1 = new PointND();
-				PointND intersectionPoint2 = new PointND();
+		for(int e=0; e<projection_number; ++e){
+			// compute theta [rad] and angular functions.
+			double theta = angle_change * e*2 * Math.PI / 360;
+			double cosTheta = Math.cos(theta);
+			double sinTheta = Math.sin(theta);
 
-				double distanceBetweenIntersection = 0;
-				PointND direction = new PointND();
-				switch (pointsOnNormal.size()) {
-				case 0:
-					distanceBetweenIntersection = 0;
-				case 1:
-					distanceBetweenIntersection = 0;
-				case 2:
-					intersectionPoint1 = pointsOnNormal.get(0);
-					intersectionPoint2 = pointsOnNormal.get(1);
-					System.out.println(pointsOnNormal);
-					//distanceBetweenIntersection = intersectionPoint1
-						//	.euclideanDistance(intersectionPoint2);
-					direction = intersectionPoint2;
-					direction.getAbstractVector().subtract(
-							intersectionPoint1.getAbstractVector());
-					System.out.println(direction);
-					distanceBetweenIntersection=direction.getAbstractVector().normL2();
-					
-
-				}
-				direction.getAbstractVector().divideBy(distanceBetweenIntersection);
-				System.out.println(direction);
-				double sampling_rate=1/internalSpacing;
-				int numberOfLineSteps = (int) (distanceBetweenIntersection *sampling_rate);
-				System.out.println(numberOfLineSteps);
-				sum=0;
+			for (int i = 0; i < detector_pixels; ++i) {
+				// compute s, the distance from the detector edge in WC [mm]
+				double s = detector_spacing * i - detectorSize / 2;
 				
-				for (int j = 0; j < numberOfLineSteps; j++) {
-					PointND nextPoint = new PointND(intersectionPoint1);
-					//PointND nextDirection = new PointND(direction);
-					direction.getAbstractVector().multipliedBy(j);
-					nextPoint.getAbstractVector().add(
-							direction.getAbstractVector());
-					// double[]
-					// coordinatesNextPoint=nextPoint.getCoordinates();
-					double xNextPoint = nextPoint.get(0);
-					double yNextPoint = nextPoint.get(1);
+				double normalX = -sinTheta + (s * cosTheta);
+				double normalY = (s * sinTheta) + cosTheta;
+				
+				PointND point1 = new PointND(s * cosTheta, s * sinTheta, .0d);
+				PointND point2 = new PointND(normalX,
+						normalY, .0d);
+				
+				StraightLine curve = new StraightLine(point1, point2);
+				
+				ArrayList<PointND> points = b.intersect(curve);
 
-					sum = sum
-							+ InterpolationOperators.interpolateLinear(target,
-									xNextPoint, yNextPoint);
-
+				
+				if (2 != points.size()){
+					if(points.size() == 0) {
+						curve.getDirection().multiplyBy(-1.d);
+						points = b.intersect(curve);
+					}
+					if(points.size() == 0)
+						continue;
 				}
-				sinogram.setAtIndex(detector_position, i, sum);
-			}
 
+				PointND intersectionStartPoint = points.get(0); 
+				PointND intersectionEndPoint = points.get(1);   
+
+				// get the normalized increment
+				SimpleVector increment = new SimpleVector(
+						intersectionEndPoint.getAbstractVector());
+				increment.subtract(intersectionStartPoint.getAbstractVector());
+				double distance = increment.normL2();
+				increment.divideBy(distance * samplingRate);
+
+				double sum = .0;
+				intersectionStartPoint = inverse.transform(intersectionStartPoint);
+				for (double t = 0.0; t < distance * samplingRate; ++t) {
+					PointND current = new PointND(intersectionStartPoint);
+					current.getAbstractVector().add(increment.multipliedBy(t));
+
+					double x = current.get(0) / target.getSpacing()[0],
+							y = current.get(1) / target.getSpacing()[1];
+
+					if (target.getSize()[0] <= x + 1
+							|| target.getSize()[1] <= y + 1
+							|| x < 0 || y < 0)
+						continue;
+
+					sum += InterpolationOperators.interpolateLinear(target, x, y);
+				}
+				sum /= samplingRate;
+				sinogram.setAtIndex(i, e, (float)sum);
+			}
 		}
 		return sinogram;
 	}
 
 	public static void main(String[] args) {
-		my_phantom phantom= new my_phantom(256,256,1.0d);
+		my_phantom phantom= new my_phantom(512,512,1.0d);
 		SheppLogan sheppPhantom=new SheppLogan(256);
 		Sinogram sinogram=new Sinogram(sheppPhantom);
 		sheppPhantom.show();

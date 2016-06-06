@@ -105,12 +105,12 @@ public class Sinogram {
 		return sinogram;
 	}
 
-	public static void main(String[] args) {
-		my_phantom phantom= new my_phantom(512,512,1.0d);
-		SheppLogan sheppPhantom=new SheppLogan(256);
-		Sinogram sinogram=new Sinogram(sheppPhantom);
-		sheppPhantom.show();
-		phantom.show();
-		sinogram.sinogram.show();
-	}
+	//public static void main(String[] args) {
+	//	my_phantom phantom= new my_phantom(512,512,1.0d);
+	//	SheppLogan sheppPhantom=new SheppLogan(256);
+	//	Sinogram sinogram=new Sinogram(sheppPhantom);
+	///	sheppPhantom.show();
+	//	phantom.show();
+	//	sinogram.sinogram.show();
+//	}
 }

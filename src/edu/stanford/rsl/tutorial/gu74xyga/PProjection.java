@@ -11,7 +11,10 @@ import edu.stanford.rsl.conrad.geometry.transforms.Transform;
 import edu.stanford.rsl.conrad.geometry.transforms.Translation;
 import edu.stanford.rsl.conrad.numerics.SimpleOperators;
 import edu.stanford.rsl.conrad.numerics.SimpleVector;
-
+//////////////////////////////////////////////////////////////////////////////////////////////////
+///// THIS IS A BACKUP FILE IN WHICH THE WRONG SOLUTIONS ARE STORED!! NOTHING TO LOOK FOR IN HERE!!
+////
+///
 
 double angle_change = angle / projection_number;
 double detector_size=detector_pixels*detector_spacing;

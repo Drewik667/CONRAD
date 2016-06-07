@@ -12,7 +12,8 @@ import edu.stanford.rsl.conrad.geometry.transforms.Translation;
 import edu.stanford.rsl.conrad.numerics.SimpleOperators;
 import edu.stanford.rsl.conrad.numerics.SimpleVector;
 //////////////////////////////////////////////////////////////////////////////////////////////////
-///// THIS IS A BACKUP FILE IN WHICH THE WRONG SOLUTIONS ARE STORED!! NOTHING TO LOOK FOR IN HERE!!
+///// THIS IS A BACKUP FILE IN WHICH THE WRONG SOLUTIONS ARE STORED!! NOTHING TO LOOK FOR IN HERE  
+//THIS IS NOT THE CODE THAT YOU'RE LOOKING FOR!!
 ////
 ///
 
@@ -39,7 +40,7 @@ PointND upperCorner = new PointND(-targetSize[0] / 2*target.getSpacing()[0],
 phantomBox.setLowerCorner(lowerCorner);
 phantomBox.setUpperCorner(upperCorner);
 */
-
+//THIS IS NOT THE CODE THAT YOU'RE LOOKING FOR!!
 //projection_number
 for (int i = 0; i < projection_number; i++) {
 	double theta = i * angle_change * 2 * Math.PI / 360;
@@ -63,7 +64,7 @@ for (int i = 0; i < projection_number; i++) {
 		StraightLine curve = new StraightLine(p1, p2);
 		ArrayList<PointND> pointsOnNormal = phantomBox.intersect(curve);
 
-
+		//THIS IS NOT THE CODE THAT YOU'RE LOOKING FOR!!
 		PointND intersectionStartPoint=new PointND();
 		PointND intersectionEndPoint=new PointND();
 		
@@ -85,7 +86,7 @@ for (int i = 0; i < projection_number; i++) {
 		intersectionLineIncrement.subtract(intersectionStartPoint.getAbstractVector());
 		double intersectionDistance=intersectionLineIncrement.normL2();
 		intersectionLineIncrement.divideBy(intersectionDistance*internalSpacing);
-		
+		//THIS IS NOT THE CODE THAT YOU'RE LOOKING FOR!!
 		// check if both directions are equal
 		SimpleVector tmp = new SimpleVector(p2.getAbstractVector());
 		tmp.subtract(p1.getAbstractVector());

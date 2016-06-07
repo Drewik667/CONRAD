@@ -16,11 +16,19 @@ import edu.stanford.rsl.tutorial.phantoms.SheppLogan;
 
 public class Sinogram {
 	public Grid2D sinogram;
+	public double angle;
+	public int detector_pixels;
+	public int projection_number;
+	public double detector_spacing;
 	public Sinogram(Grid2D phantom) {
-		this.sinogram = this.PProjection(phantom, 180, 256, 180, 1.0d);
+		this.sinogram = this.PProjection(phantom, 180, 512, 180, 1.0d);
 	}
 	public Sinogram(Grid2D phantom,double angle,int detector_pixels,int projection_number,double detector_spacing){
-		this.sinogram=this.PProjection(phantom, angle, detector_pixels, projection_number, detector_spacing);
+		this.angle=angle;
+		this.projection_number=projection_number;
+		this.detector_pixels=detector_pixels;
+		this.detector_spacing=detector_spacing;
+		this.sinogram=this.PProjection(phantom, this.angle, this.detector_pixels, this.projection_number, this.detector_spacing);
 	}
 
 	public Grid2D PProjection(Grid2D target, double angle, int detector_pixels,

@@ -53,8 +53,8 @@ public class ParallelBackProjection {
 				);
 		Transform inverse = trans.inverse();
 
-		Box b = new Box((image.getSize()[0] * image.getSpacing()[0]), (image.getSize()[1] * image.getSpacing()[1]), 2);
-		b.applyTransform(trans);
+		Box imgageBox = new Box((image.getSize()[0] * image.getSpacing()[0]), (image.getSize()[1] * image.getSpacing()[1]), 2);
+		imgageBox.applyTransform(trans);
 
 		for(int e=0; e<projection_number; ++e){
 			// compute theta [rad] and angular functions.
@@ -66,37 +66,39 @@ public class ParallelBackProjection {
 			for (int i = 0; i < detector_pixels; ++i) {
 
 				double s = detector_spacing * i - detectorSize / 2;
+			
+				double normalX = -sinTheta + (s * cosTheta);
+				double normalY = (s * sinTheta) + cosTheta;
+				
+				PointND point1 = new PointND(s * cosTheta, s * sinTheta, .0d);
+				PointND point2 = new PointND(normalX,normalY,.0d);
+				
+				StraightLine curve = new StraightLine(point1, point2);
 
-				PointND p1 = new PointND(s * cosTheta, s * sinTheta, .0d);
-				PointND p2 = new PointND(-sinTheta + (s * cosTheta),
-						(s * sinTheta) + cosTheta, .0d);
-
-				StraightLine line = new StraightLine(p1, p2);
-
-				ArrayList<PointND> points = b.intersect(line);
+				ArrayList<PointND> points = imgageBox.intersect(curve);
 
 				if (2 != points.size()){
 					if(points.size() == 0) {
-						line.getDirection().multiplyBy(-1.d);
-						points = b.intersect(line);
+						curve.getDirection().multiplyBy(-1.d);
+						points = imgageBox.intersect(curve);
 					}
 					if(points.size() == 0)
 						continue;
 				}
 
-				PointND start = points.get(0); 
-				PointND end = points.get(1);   
+				PointND intersectionStartPoint = points.get(0); 
+				PointND intersectionEndPoint = points.get(1);   
 				
-				SimpleVector increment = new SimpleVector(end.getAbstractVector());
-				increment.subtract(start.getAbstractVector());
+				SimpleVector increment = new SimpleVector(intersectionEndPoint.getAbstractVector());
+				increment.subtract(intersectionStartPoint.getAbstractVector());
 				double distance = increment.normL2();
 				increment.divideBy(distance * sampling_rate);
 
 				float val = filteredSinogram.getAtIndex(i, e);
-				start = inverse.transform(start);
+				intersectionStartPoint = inverse.transform(intersectionStartPoint);
 
 				for (double t = 0.0; t < distance * sampling_rate; ++t) {
-					PointND current = new PointND(start);
+					PointND current = new PointND(intersectionStartPoint);
 					current.getAbstractVector().add(increment.multipliedBy(t));
 
 					double x = current.get(0) / image.getSpacing()[0],

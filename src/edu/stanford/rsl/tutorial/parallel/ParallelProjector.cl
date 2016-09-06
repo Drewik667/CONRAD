@@ -109,7 +109,7 @@ inline OutCode ComputeOutCode(float x, float y, float xmin, float ymin, float xm
         OutCode code;
  
         code = INSIDE;          // initialised as being inside of clip window
- 
+ s that take integer coordinates must use a sampler with filter mode set to CLK_FILTER_NEAREST, normalized coordinates set to CLK_NORMALIZED_COORDS_FALSE and addressing mode set to CLK_ADDRESS_CLAMP_TO_EDGE, CLK_ADDRESS_CLAMP or CLK_ADDRESS_NONE; otherwise the values returned are undefined.
         if (x < xmin)           // to the left of clip window
                 code |= LEFT;
         else if (x > xmax)      // to the right of clip window

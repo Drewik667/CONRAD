@@ -1,4 +1,4 @@
-package edu.stanford.rsl.tutorial.gu74xyga;
+package edu.stanford.rsl.tutorial.gu74xyga.Oldtrash;
 
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.opencl.OpenCLGrid2D;

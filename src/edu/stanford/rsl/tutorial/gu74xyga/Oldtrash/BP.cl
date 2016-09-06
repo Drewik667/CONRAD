@@ -1,24 +1,52 @@
+
 // OpenCL Kernel Function for backprojection
 
-kernel void BP(global float* sinogram, global const int* size, global const double* spacing, int numElements){
+__constant sampler_t sampler= CLK_NORMALIZED_COORDS_FALSE|CLK_ADDRESS_CLAMP_TO_EDGE|CLK_FILTER_LINEAR;
+
+kernel void BP(__global float* resultImage,__read_only float spacingX,__read_only float spacingY,
+__read_only image2d_t sinogram,__read_only float originX,__read_only float originY, int numElements, 
+__read_only float sizeX,__read_only float sizeY){
     
     
     // get index into global data array
     const unsigned int iGID = get_global_id(0);
     const unsigned int xGID = get_global_id(1);
-
-    
+    const unsigned int yGID = get_global_id(2);
+    const unsigned int sGID = get_global_id(3);
+        
     if (iGID >= numElements)  {
         return;
     }
     
+    double theta = iGID * spacingY;
     double cosTheta = cos(theta);
     double sinTheta = sin(theta);
     
-    if (xGID >= numElements)  {
+    double2 dirDetector = {cosTheta, sinTheta};
+   	//const int x = sizeX;
+    //const int y = sizeY;
+    
+    //float2 gridXH = {x/2.f, y/2.f};
+    
+    if(xGID > sizeX || yGID > sizeY){
         return;
     }
     
+    double2 pixel={xGID * spacingX + originX, yGID * spacingX + originY};
+    
+    double s=dot(pixel , dirDetector);
+    
+    double indexS= (s - originX) / spacingX;
+    
+    if(sGID > indexS){
+        return;
+    }
+    
+    resultImage[iGID * sGID] = read_imagef(sinogram, sampler,(float2) (theta,indexS)).x;
+    
+
+   }
+
  /*
     Grid2D grid = new Grid2D(sizeof(*0), sizeof(*1));
     grid.setSpacing(spacing);

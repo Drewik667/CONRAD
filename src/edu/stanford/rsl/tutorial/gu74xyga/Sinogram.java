@@ -1,124 +1,92 @@
 package edu.stanford.rsl.tutorial.gu74xyga;
 
-import java.util.ArrayList;
-
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.InterpolationOperators;
-import edu.stanford.rsl.conrad.data.numeric.NumericPointwiseOperators;
-import edu.stanford.rsl.conrad.geometry.shapes.simple.Box;
-import edu.stanford.rsl.conrad.geometry.shapes.simple.PointND;
-import edu.stanford.rsl.conrad.geometry.shapes.simple.StraightLine;
-import edu.stanford.rsl.conrad.geometry.transforms.Transform;
-import edu.stanford.rsl.conrad.geometry.transforms.Translation;
-import edu.stanford.rsl.conrad.numerics.SimpleOperators;
-import edu.stanford.rsl.conrad.numerics.SimpleVector;
-import edu.stanford.rsl.tutorial.phantoms.SheppLogan;
 
 public class Sinogram {
+
+	private int width;
+	private int height;
+
 	public Grid2D sinogram;
-	public double angle;
-	public int detector_pixels;
 	public int projection_number;
-	public double detector_spacing;
-	public Sinogram(Grid2D phantom) {
-		this.sinogram = this.PProjection(phantom, 180, 512, 180, 1.0d);
-	}
-	public Sinogram(Grid2D phantom,double angle,int detector_pixels,int projection_number,double detector_spacing){
-		this.angle=angle;
+	public int detector_pixels;
+	public float detector_spacing;
+	public CustomPhantom phantom;
+	
+	public Sinogram(CustomPhantom phantom,int detector_pixels,int projection_number,float detector_spacing) 
+	{
 		this.projection_number=projection_number;
 		this.detector_pixels=detector_pixels;
 		this.detector_spacing=detector_spacing;
-		this.sinogram=this.PProjection(phantom, this.angle, this.detector_pixels, this.projection_number, this.detector_spacing);
+		this.phantom=phantom;
+		sinogram = new Grid2D(projection_number, detector_pixels);
+		sinogram.setOrigin(0, (-detector_pixels / 2 + 0.5) * detector_spacing);
+		sinogram.setSpacing(1, detector_spacing);
 	}
-
-	public Grid2D PProjection(Grid2D target, double angle, int detector_pixels,
-			int projection_number, double detector_spacing) {
-		double angle_change = angle / projection_number;
-		double samplingRate = 2.d; 
-		double detectorSize=detector_pixels*detector_spacing;
+	public Grid2D getSinogram(){
 		
-		Grid2D sinogram = new Grid2D(detector_pixels, projection_number);
-		sinogram.setSpacing(detector_spacing, angle_change);
-
-		// set up image bounding box in WC
-		Translation trans = new Translation(
-				-(target.getSize()[0] * target.getSpacing()[0])/2, -(target.getSize()[1] * target.getSpacing()[1])/2, -1
-			);
-		Transform inverse = trans.inverse();
-
-		Box b = new Box((target.getSize()[0] * target.getSpacing()[0]), (target.getSize()[1] * target.getSpacing()[1]), 2);
-		b.applyTransform(trans);
-
-		for(int e=0; e<projection_number; ++e){
-			// compute theta [rad] and angular functions.
-			double theta = angle_change * e*2 * Math.PI / 360;
-			double cosTheta = Math.cos(theta);
-			double sinTheta = Math.sin(theta);
-
-			for (int i = 0; i < detector_pixels; ++i) {
-				// compute s, the distance from the detector edge in WC [mm]
-				double s = detector_spacing * i - detectorSize / 2;
-				
-				double normalX = -sinTheta + (s * cosTheta);
-				double normalY = (s * sinTheta) + cosTheta;
-				
-				PointND point1 = new PointND(s * cosTheta, s * sinTheta, .0d);
-				PointND point2 = new PointND(normalX,
-						normalY, .0d);
-				
-				StraightLine curve = new StraightLine(point1, point2);
-				
-				ArrayList<PointND> points = b.intersect(curve);
-
-				
-				if (2 != points.size()){
-					if(points.size() == 0) {
-						curve.getDirection().multiplyBy(-1.d);
-						points = b.intersect(curve);
-					}
-					if(points.size() == 0)
-						continue;
+		for (int projection = 0; projection < projection_number; projection++) {
+			if (projection == 101) {
+				int x = 1;
+				x++;
+			}
+			float angle = 180f * projection / projection_number;
+			double gradient = -Math.cos(Math.toRadians(angle))
+					/ Math.sin(Math.toRadians(angle));
+			double x_step = Math.abs(Math.sin(Math.toRadians(180 - angle))
+					* phantom.getSpacing()[0]);
+			double y_step = Math.sin(Math.toRadians(angle + 270))
+					* phantom.getSpacing()[1];
+			for (double pixel = sinogram.getOrigin()[1]; pixel <= sinogram
+					.getOrigin()[1] + detector_pixels * detector_spacing; pixel += detector_spacing) {
+				double[] pixel_pos = { Math.cos(Math.toRadians(angle)) * pixel,
+						Math.sin(Math.toRadians(angle)) * pixel };
+				double[][] intersects = new LineInBox(phantom.indexToPhysical(
+						phantom.getWidth() - 1, phantom.getHeight() - 1)[0],
+						phantom.indexToPhysical(phantom.getWidth() - 1,
+								phantom.getHeight() - 1)[1],
+						phantom.indexToPhysical(0, 0)[0],
+						phantom.indexToPhysical(0, 0)[1], gradient, pixel_pos)
+						.getBoxIntersects();
+				if (intersects[0][0] == -1 && intersects[0][1] == -1
+						&& intersects[1][0] == -1 && intersects[1][1] == -1) {
+					sinogram.setAtIndex(
+							(int) sinogram.physicalToIndex(projection, pixel)[0],
+							(int) sinogram.physicalToIndex(projection, pixel)[1],
+							0);
+					continue;
 				}
 
-				PointND intersectionStartPoint = points.get(0); 
-				PointND intersectionEndPoint = points.get(1);   
-
-				// get the normalized increment
-				SimpleVector increment = new SimpleVector(
-						intersectionEndPoint.getAbstractVector());
-				increment.subtract(intersectionStartPoint.getAbstractVector());
-				double distance = increment.normL2();
-				increment.divideBy(distance * samplingRate);
-
-				double sum = .0;
-				intersectionStartPoint = inverse.transform(intersectionStartPoint);
-				for (double t = 0.0; t < distance * samplingRate; ++t) {
-					PointND current = new PointND(intersectionStartPoint);
-					current.getAbstractVector().add(increment.multipliedBy(t));
-
-					double x = current.get(0) / target.getSpacing()[0],
-							y = current.get(1) / target.getSpacing()[1];
-
-					if (target.getSize()[0] <= x + 1
-							|| target.getSize()[1] <= y + 1
-							|| x < 0 || y < 0)
-						continue;
-
-					sum += InterpolationOperators.interpolateLinear(target, x, y);
+				int steps = (int) Math.floor(Math.sqrt(Math.pow(
+						(intersects[0][0] - intersects[1][0])
+								/ phantom.getSpacing()[0], 2)
+						+ Math.pow((intersects[0][1] - intersects[1][1])
+								/ phantom.getSpacing()[1], 2)));
+				if (steps == 0) {
+					sinogram.setAtIndex((int) Math.round(sinogram
+							.physicalToIndex(projection, pixel)[0]),
+							(int) Math.round(sinogram.physicalToIndex(
+									projection, pixel)[1]), 0f);
+					continue;
 				}
-				sum /= samplingRate;
-				sinogram.setAtIndex(i, e, (float)sum);
+				float value = 0.0f;
+				for (int element = 0; element < steps; element++) {
+					double x_real = intersects[0][0] + element * x_step;
+					double y_real = intersects[0][1] + element * y_step;
+					value += InterpolationOperators.interpolateLinear(phantom,
+							phantom.physicalToIndex(x_real, y_real)[0],
+							phantom.physicalToIndex(x_real, y_real)[1]);
+				}
+				value = value / steps;
+				sinogram.setAtIndex((int) Math.round(sinogram.physicalToIndex(
+						projection, pixel)[0]), (int) Math.round(sinogram
+						.physicalToIndex(projection, pixel)[1]), value);
 			}
 		}
 		return sinogram;
 	}
-
-	//public static void main(String[] args) {
-	//	my_phantom phantom= new my_phantom(512,512,1.0d);
-	//	SheppLogan sheppPhantom=new SheppLogan(256);
-	//	Sinogram sinogram=new Sinogram(sheppPhantom);
-	///	sheppPhantom.show();
-	//	phantom.show();
-	//	sinogram.sinogram.show();
-//	}
+	
+	
+	
 }

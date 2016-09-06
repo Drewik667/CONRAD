@@ -1,4 +1,4 @@
-package edu.stanford.rsl.tutorial.gu74xyga;
+package edu.stanford.rsl.tutorial.gu74xyga.Oldtrash;
 
 import ij.ImageJ;
 import edu.stanford.rsl.conrad.data.numeric.Grid2D;
@@ -15,7 +15,7 @@ public class my_phantom extends Grid2D {
 		valueIntensity2 = 200.0f;
 		valueIntensity3 = 100.0f;
 		// spacing=1.0d;
-		this.setOrigin(-(double)x/2*spacing,-(double)y/2*spacing);
+		//this.setOrigin(-(double)x/2*spacing,-(double)y/2*spacing);
 		this.setSpacing(spacing,spacing);
 		this.setAtIndex(x, y, valueIntensity1);
 		for (int i = 0; i < x / 4; i++) {

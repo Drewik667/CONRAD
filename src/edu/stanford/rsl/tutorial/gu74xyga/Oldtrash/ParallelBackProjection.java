@@ -1,4 +1,4 @@
-package edu.stanford.rsl.tutorial.gu74xyga;
+package edu.stanford.rsl.tutorial.gu74xyga.Oldtrash;
 
 import java.util.ArrayList;
 
@@ -103,7 +103,7 @@ public class ParallelBackProjection {
 
 					double x = current.get(0) / image.getSpacing()[0],
 							y = current.get(1) / image.getSpacing()[1];
-
+					//checking if the 
 					if (x + 1 > image.getSize()[0] || y + 1 >= image.getSize()[1]|| x < 0 || y < 0)
 						continue;
 

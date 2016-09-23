@@ -15,7 +15,7 @@ public class Fanogram extends BackProjector {
 		this.distanceSD = distanceSD;
 	}
 
-	public Grid2D getFanogram(CustomPhantom phantom) {
+	public Grid2D getFanogram(Grid2D phantom) {
 		float angleIncrement = getAngleIncrement360();
 		Grid2D fanogram = new Grid2D(projections, pixels);
 		fanogram.setOrigin(0, (-pixels / 2 + 0.5) * spacing);

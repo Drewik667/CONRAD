@@ -12,19 +12,23 @@ public class CustomPhantom extends Grid2D {
 		this.height = height;
 
 		int[] offset = { width / 2, height / 2 };
-		float intensities[] = { 0.2f, 0.6f, 1.0f };
+		float intensities[] = { 20f, 60f, 100f };
 		int ring_radius_radius = 100;
 		int square_size = 160;
 		int[] line_pos = { 50, 100 };
 
 		configure(offset, intensities, ring_radius_radius, square_size,
 				line_pos);
+		
+		
+		
 		// TODO Auto-generated constructor stub
 	}
 
 	public void configure(int[] offset, float[] intensities,
 			int ring_radius_radius, int square_size, int[] line_pos) {
 
+	
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				offset[0] = width / 2;
@@ -33,6 +37,12 @@ public class CustomPhantom extends Grid2D {
 						+ Math.pow(j - offset[1], 2)) <= ring_radius_radius
 						&& Math.sqrt(Math.pow(i - offset[0], 2)
 								+ Math.pow(j - offset[1], 2)) >= ring_radius_radius / 2;
+				offset[0] = width / 9;
+				offset[1] = height / 4 * 2;				
+				boolean circle2 = Math.sqrt(Math.pow(i - offset[0], 2)
+						+ Math.pow(j - offset[1], 2)) <= ring_radius_radius
+						&& Math.sqrt(Math.pow(i - offset[0], 2)
+						+ Math.pow(j - offset[1], 2)) >= ring_radius_radius / 2;								
 				offset[0] = width / 5;
 				offset[1] = height / 7 * 3;
 				boolean square = (i >= offset[0] && i <= (offset[0] + square_size))
@@ -47,12 +57,15 @@ public class CustomPhantom extends Grid2D {
 				if (circle) {
 					intensity += intensities[0];
 				}
-				if (square) {
-					intensity += intensities[1];
-				}
-				if (line) {
-					intensity += intensities[2];
-				}
+//				if (circle2) {
+//				intensity += intensities[2];
+//				}
+				//if (square) {
+				//	intensity += intensities[1];
+				//}
+//				if (line) {
+//					intensity += intensities[2];
+//				}
 				setAtIndex(i, j, intensity);
 			}
 		}

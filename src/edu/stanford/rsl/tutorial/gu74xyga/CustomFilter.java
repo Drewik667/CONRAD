@@ -81,7 +81,7 @@ public class CustomFilter {
 		}
 		
 		filter_frequency.transformForward();
-		sinogram = transpose(sinogram);
+//		sinogram = transpose(sinogram);
 		for (int projection = 0; projection < sinogram.getHeight(); projection++) {
 			Grid1DComplex projection_complex = new Grid1DComplex(
 					sinogram.getSubGrid(projection), true);

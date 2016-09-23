@@ -24,7 +24,7 @@ __kernel void backprojectParallel(__global float* sino, __global float* result, 
 		float interpolation_value_1 = sino[(int) (trunc(pixel) * (float) projectionNumber + (float) projection)];
 		float weightFactor_1 = 1.0 - (pixel - trunc(pixel));
 		
-		float interpolation_value_2 = sino[(int) (floor(pixel) * (float) projectionNumber + (float) projection)];
+		float interpolation_value_2 = sino[(int) (ceil(pixel) * (float) projectionNumber + (float) projection)];
 		float weightFactor_2 = (pixel - trunc(pixel));
 		
 		value += weightFactor_1 * interpolation_value_1 + weightFactor_2 * interpolation_value_2;

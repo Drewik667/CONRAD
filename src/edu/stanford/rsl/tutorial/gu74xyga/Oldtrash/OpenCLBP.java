@@ -20,6 +20,7 @@ import edu.stanford.rsl.conrad.data.numeric.Grid2D;
 import edu.stanford.rsl.conrad.data.numeric.opencl.OpenCLGrid2D;
 import edu.stanford.rsl.conrad.opencl.OpenCLUtil;
 import edu.stanford.rsl.conrad.utils.Configuration;
+import edu.stanford.rsl.tutorial.gu74xyga.Sinogram;
 import edu.stanford.rsl.tutorial.phantoms.SheppLogan;
 import ij.ImageJ;
 
